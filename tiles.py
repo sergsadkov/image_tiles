@@ -36,6 +36,7 @@ class RasterBandSource(list):
                 self.append(input)
 
     # Makes a set of tiles with several bands each
+    @functionWorkTime
     def save_tiles(self, output_dir, name='image', tile_size=256,
                    input_vector=None, mask_dir=None, column=None):
 
@@ -90,6 +91,7 @@ def TileGeoTransform(gt, x_min, y_min):
     return tuple(new_gt)
 
 
+# @functionWorkTime
 def save_tile(input_list, x, y, tile_size, output_path, **options):
 
     raster_list = [gdal.Open(input) for input in input_list]
@@ -108,7 +110,7 @@ def save_tile(input_list, x, y, tile_size, output_path, **options):
     if any([band_array is None for band_array in band_array_list]):
         raise Exception('Band is None')
     elif all([(band_array==0).all() for band_array in band_array_list]):
-        print('Data is empty, cannot create tile')
+        # print('Data is empty, cannot create tile')
         return 1
     else:
         drv = gdal.GetDriverByName('GTiff')
@@ -128,6 +130,7 @@ def save_tile(input_list, x, y, tile_size, output_path, **options):
 
 # Make raster mask from a vector file writing values from a specified column
 # !!! There should be no NULL data in the specified column !!!
+@functionWorkTime
 def rasterize_mask(in_raster, in_vector, out_raster, column):
     in_ds = gdal.Open(in_raster)
     if in_ds is None:
