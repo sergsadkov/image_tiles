@@ -57,7 +57,7 @@ class RasterBandSource(list):
 
 
 # Creates geotransform for a tile
-def TileGeoTransform(gt, x_min, y_min, x_size, y_size):
+def TileGeoTransform(gt, x_min, y_min):
     new_gt = list(gt)
     dx = (new_gt[1] * cos(gt[2]) * x_min) + (new_gt[5] * sin(gt[4]) * y_min)
     dy = (new_gt[1] * sin(gt[2]) * x_min) + (new_gt[5] * cos(gt[4]) * y_min)
@@ -79,8 +79,7 @@ def save_tile(input_list, x, y, tile_size, output_path, **options):
 
     y_res, x_res = band_array_list[0].shape
     data_type = ds_1.GetRasterBand(1).DataType
-    geotransform = TileGeoTransform(ds_1.GetGeoTransform(), x, y,
-                                         x_block_size, y_block_size)
+    geotransform = TileGeoTransform(ds_1.GetGeoTransform(), x, y)
 
     if any([band_array is None for band_array in band_array_list]):
         raise Exception('Band is None')
