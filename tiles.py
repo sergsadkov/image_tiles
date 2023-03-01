@@ -6,6 +6,8 @@
 import os, sys
 import numpy as np
 from math import sin, cos, floor
+from paths import DeleteFile, TempName
+from auxiliary import functionWorkTime
 
 try:
     from osgeo import gdal
@@ -42,6 +44,9 @@ class RasterBandSource(list):
         if (mask_dir is not None) and (input_vector is not None):
             if not os.path.exists(mask_dir):
                 raise Exception(f'Mask folder does not exist: {output_dir}')
+            elif os.path.exists(self[0]):
+                full_mask_path = TempName(ext='tif')
+                rasterize_mask(self[0], input_vector, full_mask_path, column)
 
         for y_tile in range(floor(self.size[1] / tile_size)):
             for x_tile in range(floor(self.size[0] / tile_size)):
@@ -49,11 +54,30 @@ class RasterBandSource(list):
                 y = y_tile * tile_size
                 tile_name = f'{name}_X{x_tile+1}_Y{y_tile+1}.tif'
                 tile_path = os.path.join(output_dir, tile_name)
-                if save_tile(self, x, y, tile_size, tile_path):
+
+                if os.path.exists(tile_path):
                     continue
+
+                elif save_tile(self, x, y, tile_size, tile_path):
+                    continue
+
                 elif (mask_dir is not None) and (input_vector is not None):
+
                     mask_path = os.path.join(mask_dir, tile_name)
-                    rasterize_mask(tile_path, input_vector, mask_path, column)
+
+                    if os.path.exists(mask_path):
+                        continue
+
+                    # The following code is slow due to multiple times
+                    # vector data processing:
+                    # rasterize_mask(tile_path, input_vector, mask_path, column)
+
+                    # Creating mask from full_mask_path in temp dir
+                    save_tile([full_mask_path], x, y, tile_size, mask_path)
+
+        if (mask_dir is not None) and (input_vector is not None):
+            DeleteFile(full_mask_path)
+
 
 
 # Creates geotransform for a tile
